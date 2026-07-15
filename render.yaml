@@ -1,0 +1,24 @@
+# Render blueprint for the Verity backend (FastAPI). Import this repo on
+# render.com as a "Blueprint" and it configures the service automatically.
+# Secrets (sync: false) are set by hand in the Render dashboard, never in git.
+services:
+  - type: web
+    name: verity-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: ANTHROPIC_API_KEY
+        sync: false            # set in dashboard
+      - key: ALPHAVANTAGE_API_KEY
+        sync: false            # optional (spin check); set in dashboard
+      - key: VERITY_CORS_ORIGINS
+        sync: false            # set to your Vercel URL after the frontend deploys
+      - key: VERITY_RATE_PER_MIN
+        value: "10"
+      - key: VERITY_DAILY_NEW_ANALYSES
+        value: "150"
