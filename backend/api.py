@@ -29,6 +29,8 @@ import edgar   # ticker / company-name resolution
 app = FastAPI(title="Verity API")
 # CORS: "*" for local dev; in production set VERITY_CORS_ORIGINS to your site(s).
 _origins = [o.strip() for o in os.environ.get("VERITY_CORS_ORIGINS", "*").split(",") if o.strip()]
+if not _origins:                  # empty/blank env -> don't accidentally block everything
+    _origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
