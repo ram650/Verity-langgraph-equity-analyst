@@ -63,30 +63,6 @@ specificity and clarity. Grounding scores on the sample set run 88–97/100.
 - **Cost discipline:** model tiering (cheap draft, strong verifier), prompt caching of the shared
   filing block, and result caching so repeat views are instant and free.
 
-## Run it locally
-
-**Backend** (Python 3.12):
-
-```
-cd backend
-python -m venv .venv && .venv/Scripts/activate    # Windows; use source .venv/bin/activate on macOS/Linux
-pip install -r requirements.txt
-cp .env.example .env        # then add your ANTHROPIC_API_KEY
-python -m uvicorn api:app --port 8001
-```
-
-**Frontend:**
-
-```
-cd frontend
-npm install
-npm run dev                 # http://localhost:5173
-```
-
-## Deploy
-
-See [DEPLOY.md](DEPLOY.md) — frontend on Vercel, backend on Render, both from this repo.
-
 ## Safety and cost
 
 - The Anthropic key lives only server-side (never in the frontend).
