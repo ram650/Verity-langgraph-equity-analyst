@@ -7,7 +7,7 @@ scores every claim against the source, and the debate resolves into a neutral ve
 Built as a hands-on study in agentic AI and product thinking: real filings, real
 Claude agents, measured guardrails, and a small, polished product UI.
 
-**Live demo → [verity-langgraph-equity-analyst.vercel.app](https://verity-langgraph-equity-analyst.vercel.app)**
+**Live demo → [verity-equity-analyst.vercel.app](https://verity-equity-analyst.vercel.app)**
 
 ---
 
