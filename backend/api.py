@@ -159,6 +159,11 @@ def health(request: Request, ping_llm: int = 0):
         if not _rate_ok(_client_ip(request)):
             out["llm"] = "rate-limited, try later"
             return out
+        try:  # raw HTTPS reachability, independent of the SDK's client
+            r = requests.get("https://api.anthropic.com/v1/models", timeout=15)
+            out["anthropic_http"] = f"reachable (HTTP {r.status_code})"
+        except Exception as e:
+            out["anthropic_http"] = f"{type(e).__name__}: {str(e)[:120]}"
         try:
             text, _ = llm.call("Reply with the single word OK.", max_tokens=8)
             out["llm"] = f"ok ({text.strip()[:20]})"

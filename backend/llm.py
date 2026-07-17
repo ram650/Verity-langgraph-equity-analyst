@@ -6,11 +6,19 @@ call() that returns (text, usage). Centralizing this means we switch models
 
 import os
 import json
+import httpx
 from dotenv import load_dotenv
 import anthropic
 
 load_dotenv()                     # reads ANTHROPIC_API_KEY from backend/.env
-_client = anthropic.Anthropic()   # picks up the key from the environment
+# Force IPv4. Some hosts (e.g. Render) have broken IPv6 egress, and httpx
+# preferring IPv6 for api.anthropic.com then fails with APIConnectionError.
+_client = anthropic.Anthropic(
+    http_client=httpx.Client(
+        transport=httpx.HTTPTransport(local_address="0.0.0.0"),  # bind IPv4
+        timeout=httpx.Timeout(600.0, connect=15.0),
+    )
+)
 
 # Cheap default while we build. Bump to "claude-sonnet-5" for final quality.
 DEFAULT_MODEL = "claude-haiku-4-5"
