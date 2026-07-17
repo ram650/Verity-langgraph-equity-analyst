@@ -15,6 +15,7 @@ import io
 import json
 import time
 import threading
+import traceback
 import requests
 from collections import deque
 from fastapi import FastAPI, HTTPException, Request
@@ -25,6 +26,7 @@ from pydantic import BaseModel
 
 import graph   # importing compiles the LangGraph pipeline (graph.graph)
 import edgar   # ticker / company-name resolution
+import llm     # for the /health LLM self-test
 
 app = FastAPI(title="Verity API")
 # CORS: "*" for local dev; in production set VERITY_CORS_ORIGINS to your site(s).
@@ -141,6 +143,28 @@ def _shape(state: dict) -> dict:
         "spin_unavailable": (spin.get("reason") if (spin and not spin.get("available")) else None),
         "memo": state.get("memo", ""),
     }
+
+
+@app.get("/health")
+def health(request: Request, ping_llm: int = 0):
+    """Deploy sanity check. Booleans only, never secret values. ping_llm=1 makes
+    a tiny Claude call and reports the error class if it fails (rate-limited)."""
+    out = {
+        "ok": True,
+        "anthropic_key_set": bool(os.environ.get("ANTHROPIC_API_KEY")),
+        "alphavantage_key_set": bool(os.environ.get("ALPHAVANTAGE_API_KEY")),
+        "cors_origins": _origins,
+    }
+    if ping_llm:
+        if not _rate_ok(_client_ip(request)):
+            out["llm"] = "rate-limited, try later"
+            return out
+        try:
+            text, _ = llm.call("Reply with the single word OK.", max_tokens=8)
+            out["llm"] = f"ok ({text.strip()[:20]})"
+        except Exception as e:
+            out["llm"] = f"{type(e).__name__}: {str(e)[:200]}"
+    return out
 
 
 @app.get("/suggested")
@@ -278,6 +302,8 @@ def analyze(req: AnalyzeRequest, request: Request):
     try:
         state = graph.graph.invoke(init)
     except Exception as e:
+        print(f"[analyze] {ticker} failed: {e!r}")
+        traceback.print_exc()
         raise HTTPException(400, _friendly_error(str(e)))
 
     result = _shape(state)
@@ -327,6 +353,8 @@ def analyze_stream(ticker: str, request: Request, quarter: str | None = None):
                 json.dump(result, f)
             yield _sse({"done": True, "result": result})
         except Exception as e:
+            print(f"[stream] {tk} failed: {e!r}")
+            traceback.print_exc()
             yield _sse({"error": _friendly_error(str(e))})
 
     return StreamingResponse(gen(), media_type="text/event-stream")
