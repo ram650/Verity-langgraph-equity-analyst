@@ -168,7 +168,12 @@ def health(request: Request, ping_llm: int = 0):
             text, _ = llm.call("Reply with the single word OK.", max_tokens=8)
             out["llm"] = f"ok ({text.strip()[:20]})"
         except Exception as e:
-            out["llm"] = f"{type(e).__name__}: {str(e)[:200]}"
+            chain, cur, seen = [], e, set()
+            while cur is not None and id(cur) not in seen and len(chain) < 5:
+                seen.add(id(cur))
+                chain.append(f"{type(cur).__name__}: {str(cur)[:140]}")
+                cur = cur.__cause__ or cur.__context__
+            out["llm"] = " <- ".join(chain)
     return out
 
 
