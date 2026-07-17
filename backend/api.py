@@ -13,6 +13,7 @@ Run:  .venv\\Scripts\\python.exe -m uvicorn api:app --port 8000 --reload
 import os
 import io
 import json
+import re
 import time
 import threading
 import traceback
@@ -173,7 +174,8 @@ def health(request: Request, ping_llm: int = 0):
                 seen.add(id(cur))
                 chain.append(f"{type(cur).__name__}: {str(cur)[:140]}")
                 cur = cur.__cause__ or cur.__context__
-            out["llm"] = " <- ".join(chain)
+            # never let a secret leak through an exception message
+            out["llm"] = re.sub(r"sk-ant-[A-Za-z0-9_\-]+", "sk-ant-***", " <- ".join(chain))
     return out
 
 

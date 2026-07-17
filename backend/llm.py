@@ -11,13 +11,15 @@ from dotenv import load_dotenv
 import anthropic
 
 load_dotenv()                     # reads ANTHROPIC_API_KEY from backend/.env
-# Force IPv4. Some hosts (e.g. Render) have broken IPv6 egress, and httpx
-# preferring IPv6 for api.anthropic.com then fails with APIConnectionError.
+# .strip() matters: a key pasted into a host's env UI can pick up a trailing
+# newline, which then breaks every request ("Illegal header value ...\n").
+_API_KEY = (os.environ.get("ANTHROPIC_API_KEY") or "").strip() or None
 _client = anthropic.Anthropic(
+    api_key=_API_KEY,
     http_client=httpx.Client(
-        transport=httpx.HTTPTransport(local_address="0.0.0.0"),  # bind IPv4
+        transport=httpx.HTTPTransport(local_address="0.0.0.0"),  # IPv4 (safe everywhere)
         timeout=httpx.Timeout(600.0, connect=15.0),
-    )
+    ),
 )
 
 # Cheap default while we build. Bump to "claude-sonnet-5" for final quality.

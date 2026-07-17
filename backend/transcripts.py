@@ -13,7 +13,7 @@ import requests
 from dotenv import load_dotenv
 
 load_dotenv()
-AV_KEY = os.getenv("ALPHAVANTAGE_API_KEY", "demo")
+AV_KEY = os.getenv("ALPHAVANTAGE_API_KEY", "demo").strip()
 BASE = "https://www.alphavantage.co/query"
 
 
